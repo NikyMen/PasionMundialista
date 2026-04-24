@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Header } from '../components/Header';
+import { AboutUs } from '../components/AboutUs';
+---
+
+<Layout title="Nosotros - Pasión Mundialista" description="Conocenos: productos originales, atención personalizada y compromiso en cada compra">
+  <Header client:load />
+  <AboutUs client:load />
+</Layout>
