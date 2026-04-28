@@ -1,8 +1,10 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/database';
+import { db, ensureDatabaseReady } from '../../../lib/database';
 
 export const GET: APIRoute = async () => {
   try {
+    await ensureDatabaseReady();
+
     const featuredProducts = await db.products.getFeatured();
     
     return new Response(JSON.stringify(featuredProducts), {

@@ -1,8 +1,10 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/database';
+import { db, ensureDatabaseReady } from '../../lib/database';
 
 export const GET: APIRoute = async ({ url }) => {
   try {
+    await ensureDatabaseReady();
+
     const searchParams = url.searchParams;
     const search = searchParams.get('search');
     const category = searchParams.get('category');
@@ -36,6 +38,8 @@ export const GET: APIRoute = async ({ url }) => {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    await ensureDatabaseReady();
+
     const productData = await request.json();
     
     // Validación básica

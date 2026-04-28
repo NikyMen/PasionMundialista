@@ -1,10 +1,12 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/database';
+import { db, ensureDatabaseReady } from '../../lib/database';
 import type { Category } from '../../types';
 
 // GET - Obtener todas las categorías
 export const GET: APIRoute = async () => {
   try {
+    await ensureDatabaseReady();
+
     const categories = await db.categories.getAll();
 
     return new Response(JSON.stringify(categories), {
@@ -27,6 +29,8 @@ export const GET: APIRoute = async () => {
 // POST - Crear nueva categoría
 export const POST: APIRoute = async ({ request }) => {
   try {
+    await ensureDatabaseReady();
+
     const categoryData = await request.json();
 
     // Validar datos requeridos

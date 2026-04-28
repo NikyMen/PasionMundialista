@@ -21,7 +21,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onToggleFilters
 }) => {
   return (
-    <div className="bg-white shadow-sm rounded-lg p-4 mb-6">
+    <div className="mb-6 border border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search Input */}
         <div className="flex-1 relative">
@@ -33,17 +33,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             placeholder="Buscar productos..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            className="block w-full rounded-full border border-gray-300 bg-white py-3 pl-10 pr-3 leading-5 placeholder-gray-500 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
           />
         </div>
 
         {/* Filter Toggle */}
         <button
           onClick={onToggleFilters}
-          className={`flex items-center space-x-2 px-4 py-2 border rounded-md transition-colors ${
+          className={`flex items-center justify-center gap-2 rounded-full border px-5 py-3 font-bold transition-colors ${
             showFilters
-              ? 'bg-primary-600 text-white border-primary-600'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              ? 'border-primary-600 bg-primary-600 text-white'
+              : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
           }`}
         >
           <Filter size={16} />
@@ -53,11 +53,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
       {/* Category Filters */}
       {showFilters && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-4 border-t border-gray-200 pt-4">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => onCategoryChange(null)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
                 selectedCategory === null
                   ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -69,7 +69,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               <button
                 key={category}
                 onClick={() => onCategoryChange(category)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
                   selectedCategory === category
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'

@@ -105,7 +105,21 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="mb-2 text-sm font-bold uppercase tracking-wide text-primary-700">
+            Catálogo
+          </p>
+          <h2 className="text-3xl font-black text-gray-950">
+            Productos para coleccionistas
+          </h2>
+        </div>
+        <p className="max-w-md text-sm leading-6 text-gray-600">
+          Busca por nombre o filtra por categoría para encontrar rápido lo que te falta.
+        </p>
+      </div>
+
       {/* Search and Filters */}
       <SearchBar
         searchQuery={searchQuery}
@@ -118,8 +132,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
       />
 
       {/* Results Info */}
-      <div className="mb-6">
-        <p className="text-gray-600">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-medium text-gray-600">
           {filteredProducts.length === 0 ? (
             'No se encontraron productos'
           ) : (
@@ -127,9 +141,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
           )}
         </p>
         {(searchQuery || selectedCategory) && (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {searchQuery && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+              <span className="inline-flex items-center rounded-full bg-primary-100 px-3 py-1 text-xs font-bold text-primary-800">
                 Búsqueda: "{searchQuery}"
                 <button
                   onClick={() => setSearchQuery('')}
@@ -140,7 +154,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
               </span>
             )}
             {selectedCategory && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+              <span className="inline-flex items-center rounded-full bg-primary-100 px-3 py-1 text-xs font-bold text-primary-800">
                 Categoría: {selectedCategory}
                 <button
                   onClick={() => setSelectedCategory(null)}
@@ -156,7 +170,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
 
       {/* Products Grid */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -165,7 +179,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
+        <div className="border border-gray-200 bg-white py-16 text-center shadow-sm">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
             {searchQuery || selectedCategory ? 'No se encontraron productos' : 'No hay productos disponibles'}

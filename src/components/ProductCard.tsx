@@ -47,33 +47,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <>
-      <div 
-        className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer"
+      <div
+        className="group cursor-pointer overflow-hidden border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-xl"
         onClick={openModal}
       >
         <div className="relative">
-          <div className="aspect-square w-full overflow-hidden bg-gray-100">
+          <div className="aspect-square w-full overflow-hidden bg-stone-50">
             {currentImage ? (
               <img
                 src={currentImage}
                 alt={product.name}
-                className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
+                className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
               />
             ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <div className="flex h-full w-full items-center justify-center bg-gray-200">
                 <Package className="h-16 w-16 text-gray-400" />
               </div>
             )}
           </div>
           
           {/* Botón de vista detallada */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity hover:bg-black/30 hover:opacity-100">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 openModal();
               }}
-              className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100"
+              className="rounded-full bg-white p-3 shadow-md hover:bg-gray-100"
             >
               <Eye size={20} />
             </button>
@@ -84,19 +84,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70 transition-opacity"
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white transition-opacity hover:bg-black/70"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70 transition-opacity"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white transition-opacity hover:bg-black/70"
               >
                 <ChevronRight size={16} />
               </button>
               
               {/* Indicadores de imágenes */}
-              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+              <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 space-x-1">
                 {allImages.map((_, index) => (
                   <button
                     key={index}
@@ -104,8 +104,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                       e.stopPropagation(); // Evitar que se abra el modal al cambiar de imagen
                       setCurrentImageIndex(index);
                     }}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                    className={`h-2 w-2 rounded-full transition-colors ${
+                      index === currentImageIndex ? 'bg-white' : 'bg-white/50'
                     }`}
                   />
                 ))}
@@ -114,22 +114,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
         
-        <div className="p-4">
+        <div className="p-5">
           <div className="mb-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+            <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-1 text-xs font-bold text-primary-800">
               {product.category}
             </span>
           </div>
           
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+          <h3 className="mb-2 line-clamp-2 text-lg font-black text-gray-950">
             {product.name}
           </h3>
           
-          <p className="text-gray-600 text-sm mb-3 line-clamp-3">
+          <p className="mb-4 line-clamp-3 text-sm leading-6 text-gray-600">
             {product.description}
           </p>
           
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center space-x-1">
               <Star className="h-4 w-4 text-yellow-400 fill-current" />
               <Star className="h-4 w-4 text-yellow-400 fill-current" />
@@ -140,16 +140,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <span className="text-2xl font-bold text-primary-600">
+              <span className="text-2xl font-black text-primary-600">
                 {formatPriceARS(product.price)}
               </span>
             </div>
             
             <button
               onClick={handleAddToCart}
-              className="flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors bg-primary-600 text-white hover:bg-primary-700"
+              className="flex items-center gap-2 rounded-full bg-primary-600 px-4 py-2 font-bold text-white transition-colors hover:bg-primary-700"
             >
               <ShoppingCart size={16} />
               <span>Agregar</span>

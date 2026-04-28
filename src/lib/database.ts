@@ -8,6 +8,19 @@ const sql = neon(process.env.DATABASE_URL!);
 
 export { sql };
 
+let databaseReadyPromise: Promise<void> | null = null;
+
+export async function ensureDatabaseReady() {
+  if (!databaseReadyPromise) {
+    databaseReadyPromise = initDatabase().catch((error) => {
+      databaseReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return databaseReadyPromise;
+}
+
 // Función para inicializar la base de datos
 export async function initDatabase() {
   try {
@@ -32,10 +45,14 @@ export async function initDatabase() {
         category VARCHAR(255) NOT NULL,
         image TEXT,
         images TEXT[],
+        featured BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
+
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false`;
+    await sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS slug VARCHAR(255)`;
 
     // Crear tabla de vehículos
     await sql`
@@ -207,7 +224,19 @@ export const db = {
           )
           RETURNING *
         `;
-        return result[0];
+        const row = result[0];
+        return {
+          id: row.id.toString(),
+          name: row.name,
+          description: row.description,
+          category: row.category,
+          price: parseFloat(row.price),
+          image: row.image,
+          images: Array.isArray(row.images) ? row.images : [],
+          featured: row.featured || false,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at
+        };
       } catch (error) {
         console.error('Error creating product:', error);
         throw error;
@@ -344,6 +373,7 @@ export const db = {
       return rows.map(row => ({
         id: row.id,
         name: row.name,
+        slug: row.slug || '',
         description: row.description,
         createdAt: row.created_at,
         updatedAt: row.updated_at
@@ -357,6 +387,7 @@ export const db = {
       return {
         id: row.id,
         name: row.name,
+        slug: row.slug || '',
         description: row.description,
         createdAt: row.created_at,
         updatedAt: row.updated_at
@@ -365,14 +396,15 @@ export const db = {
     
     create: async (category: Omit<Category, 'id'>) => {
       const result = await sql`
-        INSERT INTO categories (name, description)
-        VALUES (${category.name}, ${category.description || null})
+        INSERT INTO categories (name, slug, description)
+        VALUES (${category.name}, ${category.slug || null}, ${category.description || null})
         RETURNING *
       `;
       const row = result[0];
       return {
         id: row.id,
         name: row.name,
+        slug: row.slug || '',
         description: row.description,
         createdAt: row.created_at,
         updatedAt: row.updated_at
@@ -383,6 +415,7 @@ export const db = {
       const result = await sql`
         UPDATE categories 
         SET name = ${updates.name}, 
+            slug = ${updates.slug},
             description = ${updates.description},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
@@ -393,6 +426,7 @@ export const db = {
       return {
         id: row.id,
         name: row.name,
+        slug: row.slug || '',
         description: row.description,
         createdAt: row.created_at,
         updatedAt: row.updated_at

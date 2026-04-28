@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Settings } from 'lucide-react';
+import { Menu, Settings, X } from 'lucide-react';
 import { CartButton } from './Cart/CartButton';
 import { CartSidebar } from './Cart/CartSidebar';
 
@@ -15,38 +15,35 @@ export const Header: React.FC = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const navLinkClass =
+    'rounded-full px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-primary-50 hover:text-primary-700';
+
+  const mobileLinkClass =
+    'block rounded-md px-3 py-2 font-medium text-gray-700 transition-colors hover:bg-primary-50 hover:text-primary-700';
+
   return (
     <>
-      <header className="bg-white shadow-sm sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      <header className="sticky top-0 z-30 border-b border-white/70 bg-white/90 shadow-sm backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <a href="/" className="flex items-center space-x-2">
                 <img
                   src="/logo-pasion-mundialista.png"
                   alt="Pasión Mundialista Logo"
-                  className="h-12 w-auto"
+                  className="h-12 w-12 rounded-full object-cover drop-shadow-sm"
                 />
               </a>
             </div>
 
-            <nav className="hidden md:flex items-center space-x-8">
-              <a
-                href="/"
-                className="text-gray-700 hover:text-primary-600 transition-colors"
-              >
+            <nav className="hidden items-center rounded-full border border-gray-200 bg-white px-2 py-1 shadow-sm md:flex">
+              <a href="/" className={navLinkClass}>
                 Inicio
               </a>
-              <a
-                href="/#productos"
-                className="text-gray-700 hover:text-primary-600 transition-colors"
-              >
+              <a href="/#productos" className={navLinkClass}>
                 Productos
               </a>
-              <a
-                href="/nosotros"
-                className="text-gray-700 hover:text-primary-600 transition-colors"
-              >
+              <a href="/nosotros" className={navLinkClass}>
                 Nosotros
               </a>
             </nav>
@@ -56,7 +53,8 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={toggleMobileMenu}
-                className="md:hidden p-2 rounded-md text-gray-700 hover:text-primary-600 hover:bg-gray-100"
+                className="rounded-full border border-gray-200 p-2 text-gray-700 hover:bg-primary-50 hover:text-primary-700 md:hidden"
+                aria-label="Abrir menu"
               >
                 {isMobileMenuOpen ? (
                   <X className="h-6 w-6" />
@@ -69,34 +67,34 @@ export const Header: React.FC = () => {
 
           {isMobileMenuOpen && (
             <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+              <div className="space-y-1 border-t border-gray-200 px-2 pb-3 pt-2 sm:px-3">
                 <a
                   href="/"
-                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
+                  className={mobileLinkClass}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Inicio
                 </a>
                 <a
                   href="/#productos"
-                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
+                  className={mobileLinkClass}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Productos
                 </a>
                 <a
                   href="/nosotros"
-                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
+                  className={mobileLinkClass}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Nosotros
                 </a>
                 <a
                   href="/admin"
-                  className="flex items-center px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
+                  className="flex items-center rounded-md px-3 py-2 font-medium text-gray-700 transition-colors hover:bg-primary-50 hover:text-primary-700"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Settings className="h-5 w-5 mr-2" />
+                  <Settings className="mr-2 h-5 w-5" />
                   Admin
                 </a>
               </div>

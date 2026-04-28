@@ -1,8 +1,10 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/database';
+import { db, ensureDatabaseReady } from '../../../lib/database';
 
 export const GET: APIRoute = async ({ params }) => {
   try {
+    await ensureDatabaseReady();
+
     const { id } = params;
     
     if (!id) {
@@ -14,7 +16,7 @@ export const GET: APIRoute = async ({ params }) => {
       });
     }
     
-    const product = db.products.getById(id);
+    const product = await db.products.getById(id);
     
     if (!product) {
       return new Response(JSON.stringify({ error: 'Producto no encontrado' }), {
@@ -43,6 +45,8 @@ export const GET: APIRoute = async ({ params }) => {
 
 export const PUT: APIRoute = async ({ params, request }) => {
   try {
+    await ensureDatabaseReady();
+
     const { id } = params;
     
     if (!id) {
@@ -78,7 +82,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
     });
   } catch (error) {
     console.error('Error en API PUT:', error);
-    return new Response(JSON.stringify({ error: 'Error al actualizar producto: ' + error.message }), {
+    return new Response(JSON.stringify({ error: 'Error al actualizar producto: ' + (error instanceof Error ? error.message : 'Error desconocido') }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
@@ -89,6 +93,8 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
 export const DELETE: APIRoute = async ({ params }) => {
   try {
+    await ensureDatabaseReady();
+
     const { id } = params;
     
     if (!id) {
@@ -100,7 +106,7 @@ export const DELETE: APIRoute = async ({ params }) => {
       });
     }
     
-    const deletedProduct = db.products.delete(id);
+    const deletedProduct = await db.products.delete(id);
     
     if (!deletedProduct) {
       return new Response(JSON.stringify({ error: 'Producto no encontrado' }), {

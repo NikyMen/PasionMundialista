@@ -46,9 +46,13 @@ export const AdminPanel: React.FC = () => {
     try {
       const response = await fetch('/api/products');
       const data = await response.json();
-      setProducts(data);
+      setProducts(Array.isArray(data) ? data : []);
+      if (!response.ok) {
+        console.error('Error al cargar productos:', data);
+      }
     } catch (error) {
       console.error('Error al cargar productos:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -58,8 +62,12 @@ export const AdminPanel: React.FC = () => {
     try {
       const response = await fetch('/api/categories');
       const data = await response.json();
-      setCategories(data);
+      setCategories(Array.isArray(data) ? data : []);
+      if (!response.ok) {
+        console.error('Error al cargar categorias:', data);
+      }
     } catch (error) {
+      setCategories([]);
       console.error('Error al cargar categorías:', error);
     }
   };
@@ -251,7 +259,7 @@ export const AdminPanel: React.FC = () => {
   const stats = {
     totalProducts: products.length,
     totalCategories: categories.length,
-    totalValue: products.reduce((sum, product) => sum + product.price, 0),
+    totalValue: products.reduce((sum, product) => sum + (Number(product.price) || 0), 0),
   };
 
   if (loading) {
