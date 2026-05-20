@@ -1,12 +1,10 @@
 import type { APIRoute } from 'astro';
-import { db, ensureDatabaseReady } from '../../../lib/database';
+import { db } from '../../../lib/database';
 import type { Category } from '../../../types';
 
 // GET - Obtener categoría por ID
 export const GET: APIRoute = async ({ params }) => {
   try {
-    await ensureDatabaseReady();
-
     const { id } = params;
     if (!id) {
       return new Response(JSON.stringify({ error: 'ID de categoría no proporcionado' }), {
@@ -48,8 +46,6 @@ export const GET: APIRoute = async ({ params }) => {
 // PUT - Actualizar categoría por ID
 export const PUT: APIRoute = async ({ params, request }) => {
   try {
-    await ensureDatabaseReady();
-
     const { id } = params;
     if (!id) {
       return new Response(JSON.stringify({ error: 'ID de categoría no proporcionado' }), {
@@ -103,8 +99,6 @@ export const PUT: APIRoute = async ({ params, request }) => {
 // DELETE - Eliminar categoría por ID
 export const DELETE: APIRoute = async ({ params }) => {
   try {
-    await ensureDatabaseReady();
-
     const { id } = params;
     if (!id) {
       return new Response(JSON.stringify({ error: 'ID de categoría no proporcionado' }), {

@@ -1,10 +1,8 @@
 import type { APIRoute } from 'astro';
-import { db, ensureDatabaseReady } from '../../../lib/database';
+import { db } from '../../../lib/database';
 
 export const GET: APIRoute = async ({ params }) => {
   try {
-    await ensureDatabaseReady();
-
     const { id } = params;
     
     if (!id) {
@@ -45,8 +43,6 @@ export const GET: APIRoute = async ({ params }) => {
 
 export const PUT: APIRoute = async ({ params, request }) => {
   try {
-    await ensureDatabaseReady();
-
     const { id } = params;
     
     if (!id) {
@@ -93,8 +89,6 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
 export const DELETE: APIRoute = async ({ params }) => {
   try {
-    await ensureDatabaseReady();
-
     const { id } = params;
     
     if (!id) {

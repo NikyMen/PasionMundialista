@@ -12,6 +12,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -31,14 +32,34 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  const readCachedArray = <T,>(key: string): T[] => {
+    try {
+      const cached = localStorage.getItem(key);
+      if (!cached) return [];
+      const parsed = JSON.parse(cached);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
   const loadProducts = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const response = await fetch('/api/products');
+      if (!response.ok) throw new Error('No se pudo cargar el catálogo');
       const data = await response.json();
-      setProducts(data);
+      const productList = Array.isArray(data) ? data : [];
+      setProducts(productList);
+      try {
+        localStorage.setItem('catalog-products', JSON.stringify(productList));
+      } catch {}
     } catch (error) {
       console.error('Error al cargar productos:', error);
+      setLoadError(true);
+      const cachedProducts = readCachedArray<Product>('catalog-products');
+      if (cachedProducts.length > 0) setProducts(cachedProducts);
     } finally {
       setLoading(false);
     }
@@ -47,10 +68,17 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
   const loadCategories = async () => {
     try {
       const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error('No se pudieron cargar las categorías');
       const data = await response.json();
-      setCategories(data.map((cat: any) => cat.name));
+      const categoryList = Array.isArray(data) ? data.map((cat: any) => cat.name) : [];
+      setCategories(categoryList);
+      try {
+        localStorage.setItem('catalog-categories', JSON.stringify(categoryList));
+      } catch {}
     } catch (error) {
       console.error('Error al cargar categorías:', error);
+      const cachedCategories = readCachedArray<string>('catalog-categories');
+      if (cachedCategories.length > 0) setCategories(cachedCategories);
     }
   };
 
@@ -131,10 +159,18 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
         onToggleFilters={handleToggleFilters}
       />
 
+      {loadError && (
+        <div className="mb-6 border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
+          No pudimos actualizar el catálogo. Si ves productos, son datos guardados temporalmente.
+        </div>
+      )}
+
       {/* Results Info */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-medium text-gray-600">
-          {filteredProducts.length === 0 ? (
+          {loadError && products.length === 0 ? (
+            'No se pudieron cargar productos'
+          ) : filteredProducts.length === 0 ? (
             'No se encontraron productos'
           ) : (
             `Mostrando ${filteredProducts.length} de ${products.length} productos`
@@ -182,10 +218,14 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onCartUpdate }) => {
         <div className="border border-gray-200 bg-white py-16 text-center shadow-sm">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
-            {searchQuery || selectedCategory ? 'No se encontraron productos' : 'No hay productos disponibles'}
+            {loadError && products.length === 0
+              ? 'No pudimos cargar el catálogo'
+              : searchQuery || selectedCategory ? 'No se encontraron productos' : 'No hay productos disponibles'}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            {searchQuery || selectedCategory 
+            {loadError && products.length === 0
+              ? 'Intentá de nuevo en unos minutos.'
+              : searchQuery || selectedCategory 
               ? 'Intenta con otros términos de búsqueda o filtros diferentes.'
               : 'Los productos aparecerán aquí cuando estén disponibles.'
             }

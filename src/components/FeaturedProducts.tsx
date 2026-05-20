@@ -27,15 +27,31 @@ export const FeaturedProducts: React.FC = () => {
     return () => clearInterval(interval);
   }, [featuredProducts.length, isAutoPlaying]);
 
+  const readCachedProducts = (): Product[] => {
+    try {
+      const cached = localStorage.getItem('featured-products');
+      if (!cached) return [];
+      const parsed = JSON.parse(cached);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
   const fetchFeaturedProducts = async () => {
     try {
       const response = await fetch('/api/products/featured');
-      if (response.ok) {
-        const products = await response.json();
-        setFeaturedProducts(products);
-      }
+      if (!response.ok) throw new Error('No se pudieron cargar los destacados');
+      const products = await response.json();
+      const productList = Array.isArray(products) ? products : [];
+      setFeaturedProducts(productList);
+      try {
+        localStorage.setItem('featured-products', JSON.stringify(productList));
+      } catch {}
     } catch (error) {
       console.error('Error fetching featured products:', error);
+      const cachedProducts = readCachedProducts();
+      if (cachedProducts.length > 0) setFeaturedProducts(cachedProducts);
     } finally {
       setLoading(false);
     }

@@ -1,17 +1,18 @@
 import type { APIRoute } from 'astro';
-import { db, ensureDatabaseReady } from '../../../lib/database';
+import { db } from '../../../lib/database';
+
+const jsonHeaders = {
+  'Content-Type': 'application/json',
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=86400'
+};
 
 export const GET: APIRoute = async () => {
   try {
-    await ensureDatabaseReady();
-
     const featuredProducts = await db.products.getFeatured();
     
     return new Response(JSON.stringify(featuredProducts), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: jsonHeaders,
     });
   } catch (error) {
     console.error('Error al obtener productos destacados:', error);
@@ -19,6 +20,7 @@ export const GET: APIRoute = async () => {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
       },
     });
   }

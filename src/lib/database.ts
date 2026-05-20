@@ -8,6 +8,22 @@ const sql = neon(process.env.DATABASE_URL!);
 
 export { sql };
 
+const mapProduct = (row: any) => ({
+  id: row.id.toString(),
+  name: row.name,
+  description: row.description,
+  category: row.category,
+  price: parseFloat(row.price),
+  image: row.image,
+  images: Array.isArray(row.images) ? row.images : [],
+  featured: row.featured || false,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const isMissingFeaturedColumn = (error: unknown) =>
+  error instanceof Error && error.message.toLowerCase().includes('featured');
+
 let databaseReadyPromise: Promise<void> | null = null;
 
 export async function ensureDatabaseReady() {
@@ -100,87 +116,43 @@ export const db = {
   products: {
     getAll: async () => {
       try {
-        // Obtener productos sin la columna featured primero
+        const rows = await sql`
+          SELECT id, name, description, category, price, image, images, featured, created_at, updated_at 
+          FROM products 
+          ORDER BY created_at DESC
+        `;
+        return rows.map(mapProduct);
+      } catch (error) {
+        if (!isMissingFeaturedColumn(error)) throw error;
+
         const rows = await sql`
           SELECT id, name, description, category, price, image, images, created_at, updated_at 
           FROM products 
           ORDER BY created_at DESC
         `;
-        
-        // Intentar obtener los valores de featured por separado
-        let featuredMap = new Map();
-        try {
-          const featuredRows = await sql`
-            SELECT id, featured 
-            FROM products
-          `;
-          featuredRows.forEach(row => {
-            featuredMap.set(row.id.toString(), row.featured || false);
-          });
-        } catch (featuredError) {
-          // Si la columna featured no existe, todos serán false
-          console.log('Columna featured no existe, usando false por defecto');
-        }
-        
-        return rows.map(row => ({
-          id: row.id.toString(),
-          name: row.name,
-          description: row.description,
-          category: row.category,
-          price: parseFloat(row.price),
-          image: row.image,
-          images: Array.isArray(row.images) ? row.images : [],
-          featured: featuredMap.get(row.id.toString()) || false,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at
-        }));
-      } catch (error) {
-        console.error('Error en getAll:', error);
-        return [];
+        return rows.map(mapProduct);
       }
     },
     
     getById: async (id: string) => {
       try {
-        // Primero intentar con consulta específica sin featured
         const rows = await sql`
-          SELECT id, name, description, category, price, image, images, created_at, updated_at 
+          SELECT id, name, description, category, price, image, images, featured, created_at, updated_at 
           FROM products 
           WHERE id = ${id}
         `;
         
         if (rows.length === 0) return null;
-        const row = rows[0];
-        
-        // Intentar obtener el valor de featured por separado
-        let featured = false;
-        try {
-          const featuredResult = await sql`
-            SELECT featured 
-            FROM products 
-            WHERE id = ${id}
-          `;
-          featured = featuredResult[0]?.featured || false;
-        } catch (featuredError) {
-          // Si la columna featured no existe, usar false por defecto
-          featured = false;
-        }
-        
-        return {
-          id: row.id.toString(),
-          name: row.name,
-          description: row.description,
-          category: row.category,
-          price: parseFloat(row.price),
-          image: row.image,
-          images: Array.isArray(row.images) ? row.images : [],
-          featured: featured,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at
-        };
+        return mapProduct(rows[0]);
       } catch (error) {
-        console.error('Error en getById:', error);
-        return null;
+        if (!isMissingFeaturedColumn(error)) throw error;
+
+        const rows = await sql`
+          SELECT id, name, description, category, price, image, images, created_at, updated_at 
+          FROM products 
+          WHERE id = ${id}
+        `;
+        return rows.length === 0 ? null : mapProduct(rows[0]);
       }
     },
 
@@ -192,22 +164,10 @@ export const db = {
           WHERE featured = true 
           ORDER BY created_at DESC
         `;
-        return rows.map(row => ({
-          id: row.id.toString(),
-          name: row.name,
-          description: row.description,
-          category: row.category,
-          price: parseFloat(row.price),
-          image: row.image,
-          images: Array.isArray(row.images) ? row.images : [],
-          featured: true,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at
-        }));
+        return rows.map(mapProduct);
       } catch (error) {
-        // Si la columna featured no existe, devolver array vacío
-        console.log('Columna featured no existe, devolviendo array vacío');
-        return [];
+        if (isMissingFeaturedColumn(error)) return [];
+        throw error;
       }
     },
     
@@ -224,19 +184,7 @@ export const db = {
           )
           RETURNING *
         `;
-        const row = result[0];
-        return {
-          id: row.id.toString(),
-          name: row.name,
-          description: row.description,
-          category: row.category,
-          price: parseFloat(row.price),
-          image: row.image,
-          images: Array.isArray(row.images) ? row.images : [],
-          featured: row.featured || false,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at
-        };
+        return mapProduct(result[0]);
       } catch (error) {
         console.error('Error creating product:', error);
         throw error;
@@ -291,19 +239,7 @@ export const db = {
           throw new Error('Error al actualizar el producto');
         }
         
-        const row = result[0];
-        const updatedProduct = {
-          id: row.id.toString(),
-          name: row.name,
-          description: row.description,
-          category: row.category,
-          price: parseFloat(row.price),
-          image: row.image,
-          images: Array.isArray(row.images) ? row.images : [],
-          featured: row.featured || false,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at
-        };
+        const updatedProduct = mapProduct(result[0]);
         
         console.log('Producto actualizado correctamente:', updatedProduct);
         return updatedProduct;
@@ -316,54 +252,29 @@ export const db = {
     delete: async (id: string) => {
       const rows = await sql`DELETE FROM products WHERE id = ${id} RETURNING *`;
       if (rows.length === 0) return null;
-      const row = rows[0];
-      return {
-        id: row.id.toString(),
-        name: row.name,
-        description: row.description,
-        category: row.category,
-        price: parseFloat(row.price),
-        image: row.image,
-        images: Array.isArray(row.images) ? row.images : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      };
+      return mapProduct(rows[0]);
     },
     
     search: async (query: string) => {
       const rows = await sql`
-        SELECT * FROM products 
+        SELECT id, name, description, category, price, image, images, featured, created_at, updated_at
+        FROM products 
         WHERE name ILIKE ${`%${query}%`} 
         OR description ILIKE ${`%${query}%`} 
         OR category ILIKE ${`%${query}%`}
         ORDER BY created_at DESC
       `;
-      return rows.map(row => ({
-        id: row.id.toString(),
-        name: row.name,
-        description: row.description,
-        category: row.category,
-        price: parseFloat(row.price),
-        image: row.image,
-        images: Array.isArray(row.images) ? row.images : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      }));
+      return rows.map(mapProduct);
     },
     
     getByCategory: async (category: string) => {
-      const rows = await sql`SELECT * FROM products WHERE category = ${category} ORDER BY created_at DESC`;
-      return rows.map(row => ({
-        id: row.id.toString(),
-        name: row.name,
-        description: row.description,
-        category: row.category,
-        price: parseFloat(row.price),
-        image: row.image,
-        images: Array.isArray(row.images) ? row.images : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      }));
+      const rows = await sql`
+        SELECT id, name, description, category, price, image, images, featured, created_at, updated_at
+        FROM products
+        WHERE category = ${category}
+        ORDER BY created_at DESC
+      `;
+      return rows.map(mapProduct);
     }
   },
   
