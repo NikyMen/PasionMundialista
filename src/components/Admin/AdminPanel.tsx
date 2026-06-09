@@ -488,6 +488,13 @@ export const AdminPanel: React.FC = () => {
                     <span className="font-medium">Producto Destacado</span>
                   </div>
                 )}
+
+                {viewingProduct.soldOut && (
+                  <div className="flex items-center space-x-2 text-red-600">
+                    <Package className="w-5 h-5" />
+                    <span className="font-medium">Producto Agotado</span>
+                  </div>
+                )}
                 
                 {viewingProduct.image && (
                   <div>

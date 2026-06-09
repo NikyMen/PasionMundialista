@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, ShoppingCart, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ShoppingCart, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
 import { useNotification } from '../hooks/useNotification';
 import { formatPriceARS } from '../lib/formatters';
+import { formatProductAvailabilityMessage, openWhatsApp } from '../lib/whatsapp';
 import type { Product } from '../types';
 
 interface ProductDetailModalProps {
@@ -27,6 +28,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const currentImage = allImages[currentImageIndex] || product.image;
 
   const handleAddToCart = () => {
+    if (product.soldOut) {
+      openWhatsApp(formatProductAvailabilityMessage(product));
+      return;
+    }
+
     addItem(product, quantity);
     showSuccess(`${product.name} se añadió correctamente al carrito`);
   };
@@ -153,6 +159,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                   {product.category}
                 </span>
+                {product.soldOut && (
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Agotado
+                  </span>
+                )}
               </div>
               
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -173,6 +184,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
               
               {/* Quantity selector */}
+              {!product.soldOut && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Cantidad</h3>
                 <div className="flex items-center space-x-2">
@@ -192,14 +204,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </button>
                 </div>
               </div>
+              )}
               
               {/* Add to cart button */}
               <button
                 onClick={handleAddToCart}
-                className="w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-md font-medium transition-colors bg-primary-600 text-white hover:bg-primary-700"
+                className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-md font-medium transition-colors text-white ${
+                  product.soldOut ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'
+                }`}
               >
-                <ShoppingCart size={20} />
-                <span>Agregar al carrito</span>
+                {product.soldOut ? <MessageCircle size={20} /> : <ShoppingCart size={20} />}
+                <span>{product.soldOut ? 'Consultar' : 'Agregar al carrito'}</span>
               </button>
             </div>
           </div>

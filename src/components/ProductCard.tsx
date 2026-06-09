@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Package, Star, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ShoppingCart, Package, Star, ChevronLeft, ChevronRight, Eye, MessageCircle } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
 import { useNotification } from '../hooks/useNotification';
 import { Notification } from './Notification';
 import { ProductDetailModal } from './ProductDetailModal';
 import { formatPriceARS } from '../lib/formatters';
+import { formatProductAvailabilityMessage, openWhatsApp } from '../lib/whatsapp';
 import type { Product } from '../types';
 
 interface ProductCardProps {
@@ -21,6 +22,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     e.stopPropagation(); // Evitar que se abra el modal al hacer clic en "Agregar"
     addItem(product, 1);
     showSuccess(`${product.name} se añadió correctamente al carrito`);
+  };
+
+  const handleConsultProduct = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openWhatsApp(formatProductAvailabilityMessage(product));
   };
 
   const openModal = () => {
@@ -65,6 +71,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             )}
           </div>
+
+          {product.soldOut && (
+            <div className="absolute left-3 top-3">
+              <span className="inline-flex items-center rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white shadow">
+                Agotado
+              </span>
+            </div>
+          )}
           
           {/* Botón de vista detallada */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity hover:bg-black/30 hover:opacity-100">
@@ -148,11 +162,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
             
             <button
-              onClick={handleAddToCart}
-              className="flex items-center gap-2 rounded-full bg-primary-600 px-4 py-2 font-bold text-white transition-colors hover:bg-primary-700"
+              onClick={product.soldOut ? handleConsultProduct : handleAddToCart}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 font-bold text-white transition-colors ${
+                product.soldOut ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'
+              }`}
             >
-              <ShoppingCart size={16} />
-              <span>Agregar</span>
+              {product.soldOut ? <MessageCircle size={16} /> : <ShoppingCart size={16} />}
+              <span>{product.soldOut ? 'Consultar' : 'Agregar'}</span>
             </button>
           </div>
         </div>

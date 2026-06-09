@@ -32,6 +32,27 @@ export const formatWhatsAppMessage = (items: any[], total: number) => {
   return message;
 };
 
+export const formatProductAvailabilityMessage = (product: {
+  name: string;
+  category?: string;
+  price?: number;
+}) => {
+  let message = 'Hola! Queria consultar si tienen disponible este producto:\n\n';
+  message += `*${product.name}*\n`;
+
+  if (product.category) {
+    message += `Categoria: ${product.category}\n`;
+  }
+
+  if (typeof product.price === 'number') {
+    message += `Precio publicado: $${product.price.toFixed(2)}\n`;
+  }
+
+  message += '\nGracias!';
+
+  return message;
+};
+
 export const openWhatsApp = (message: string) => {
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${WHATSAPP_CONFIG.phoneNumber}?text=${encodedMessage}`;

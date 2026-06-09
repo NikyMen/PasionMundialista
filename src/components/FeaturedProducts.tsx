@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, ShoppingCart, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, Star, MessageCircle } from 'lucide-react';
 import type { Product } from '../types';
 import { useCartStore } from '../stores/cartStore';
 import { formatPriceARS } from '../lib/formatters';
+import { formatProductAvailabilityMessage, openWhatsApp } from '../lib/whatsapp';
 
 export const FeaturedProducts: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -67,6 +68,15 @@ export const FeaturedProducts: React.FC = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? featuredProducts.length - 1 : prevIndex - 1
     );
+  };
+
+  const handleProductAction = (product: Product) => {
+    if (product.soldOut) {
+      openWhatsApp(formatProductAvailabilityMessage(product));
+      return;
+    }
+
+    addItem(product, 1);
   };
 
   if (loading) {
@@ -147,6 +157,13 @@ export const FeaturedProducts: React.FC = () => {
                           Destacado
                         </span>
                       </div>
+                      {product.soldOut && (
+                        <div className="absolute right-4 top-4">
+                          <span className="inline-flex items-center rounded-full bg-red-600 px-3 py-1 text-sm font-bold text-white shadow-lg">
+                            Agotado
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col justify-center p-8 md:w-1/2 lg:p-12">
@@ -171,11 +188,13 @@ export const FeaturedProducts: React.FC = () => {
                           </span>
                         </div>
                         <button
-                          onClick={() => addItem(product, 1)}
-                          className="flex items-center justify-center gap-3 rounded-full bg-primary-600 px-8 py-4 font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-700 hover:shadow-xl"
+                          onClick={() => handleProductAction(product)}
+                          className={`flex items-center justify-center gap-3 rounded-full px-8 py-4 font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                            product.soldOut ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'
+                          }`}
                         >
-                          <ShoppingCart size={24} />
-                          <span>Agregar</span>
+                          {product.soldOut ? <MessageCircle size={24} /> : <ShoppingCart size={24} />}
+                          <span>{product.soldOut ? 'Consultar' : 'Agregar'}</span>
                         </button>
                       </div>
                     </div>

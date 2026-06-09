@@ -76,8 +76,13 @@ export const ProductList: React.FC<ProductListProps> = ({
                       )}
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {product.name}
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                        <span>{product.name}</span>
+                        {product.soldOut && (
+                          <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                            Agotado
+                          </span>
+                        )}
                       </div>
                       <div className="text-sm text-gray-500 truncate max-w-xs">
                         {product.description}

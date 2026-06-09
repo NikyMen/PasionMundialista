@@ -13,6 +13,7 @@ const productSchema = z.object({
   image: z.string().optional(),
   images: z.array(z.string()).optional(),
   featured: z.boolean().optional(),
+  soldOut: z.boolean().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -46,6 +47,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       image: product?.image || '',
       images: product?.images || [],
       featured: product?.featured || false,
+      soldOut: product?.soldOut || false,
     }
   });
 
@@ -227,6 +229,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       image: imagePreview,
       images: additionalImages,
       featured: data.featured || false, // Asegurar que featured siempre se incluya
+      soldOut: data.soldOut || false,
     };
     
     console.log('Datos del formulario a enviar:', formDataToSend);
@@ -335,6 +338,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     Los productos destacados aparecerán en el carrusel de la página principal
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Producto Agotado */}
+            <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <input
+                type="checkbox"
+                {...register('soldOut')}
+                className="w-5 h-5 text-red-600 bg-white border-red-300 rounded focus:ring-red-500 focus:ring-2"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-900">Producto Agotado</span>
+                <p className="text-xs text-gray-600">
+                  En la pagina principal se mostrara Consultar en lugar de Agregar
+                </p>
               </div>
             </div>
 

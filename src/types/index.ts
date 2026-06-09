@@ -7,6 +7,7 @@ export interface Product {
   image?: string;
   images: string[];
   featured?: boolean;
+  soldOut?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

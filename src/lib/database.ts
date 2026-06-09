@@ -17,12 +17,29 @@ const mapProduct = (row: any) => ({
   image: row.image,
   images: Array.isArray(row.images) ? row.images : [],
   featured: row.featured || false,
+  soldOut: row.sold_out || false,
   createdAt: row.created_at,
   updatedAt: row.updated_at
 });
 
-const isMissingFeaturedColumn = (error: unknown) =>
-  error instanceof Error && error.message.toLowerCase().includes('featured');
+const isMissingProductFlagColumn = (error: unknown) =>
+  error instanceof Error && ['featured', 'sold_out'].some((column) => error.message.toLowerCase().includes(column));
+
+let productColumnsReadyPromise: Promise<void> | null = null;
+
+const ensureProductColumnsReady = async () => {
+  if (!productColumnsReadyPromise) {
+    productColumnsReadyPromise = (async () => {
+      await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false`;
+      await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sold_out BOOLEAN DEFAULT false`;
+    })().catch((error) => {
+      productColumnsReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return productColumnsReadyPromise;
+};
 
 let databaseReadyPromise: Promise<void> | null = null;
 
@@ -62,12 +79,14 @@ export async function initDatabase() {
         image TEXT,
         images TEXT[],
         featured BOOLEAN DEFAULT false,
+        sold_out BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sold_out BOOLEAN DEFAULT false`;
     await sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS slug VARCHAR(255)`;
 
     // Crear tabla de vehículos
@@ -116,14 +135,15 @@ export const db = {
   products: {
     getAll: async () => {
       try {
+        await ensureProductColumnsReady();
         const rows = await sql`
-          SELECT id, name, description, category, price, image, images, featured, created_at, updated_at 
+          SELECT id, name, description, category, price, image, images, featured, sold_out, created_at, updated_at
           FROM products 
           ORDER BY created_at DESC
         `;
         return rows.map(mapProduct);
       } catch (error) {
-        if (!isMissingFeaturedColumn(error)) throw error;
+        if (!isMissingProductFlagColumn(error)) throw error;
 
         const rows = await sql`
           SELECT id, name, description, category, price, image, images, created_at, updated_at 
@@ -136,8 +156,9 @@ export const db = {
     
     getById: async (id: string) => {
       try {
+        await ensureProductColumnsReady();
         const rows = await sql`
-          SELECT id, name, description, category, price, image, images, featured, created_at, updated_at 
+          SELECT id, name, description, category, price, image, images, featured, sold_out, created_at, updated_at
           FROM products 
           WHERE id = ${id}
         `;
@@ -145,7 +166,7 @@ export const db = {
         if (rows.length === 0) return null;
         return mapProduct(rows[0]);
       } catch (error) {
-        if (!isMissingFeaturedColumn(error)) throw error;
+        if (!isMissingProductFlagColumn(error)) throw error;
 
         const rows = await sql`
           SELECT id, name, description, category, price, image, images, created_at, updated_at 
@@ -158,29 +179,31 @@ export const db = {
 
     getFeatured: async () => {
       try {
+        await ensureProductColumnsReady();
         const rows = await sql`
-          SELECT id, name, description, category, price, image, images, created_at, updated_at, featured
+          SELECT id, name, description, category, price, image, images, created_at, updated_at, featured, sold_out
           FROM products 
           WHERE featured = true 
           ORDER BY created_at DESC
         `;
         return rows.map(mapProduct);
       } catch (error) {
-        if (isMissingFeaturedColumn(error)) return [];
+        if (isMissingProductFlagColumn(error)) return [];
         throw error;
       }
     },
     
     create: async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
       try {
+        await ensureProductColumnsReady();
         const result = await sql`
           INSERT INTO products (
-            name, description, price, category, image, images, featured
+            name, description, price, category, image, images, featured, sold_out
           )
           VALUES (
             ${product.name}, ${product.description}, ${product.price}, 
             ${product.category}, ${product.image || null}, 
-            ${product.images || []}, ${product.featured || false}
+            ${product.images || []}, ${product.featured || false}, ${product.soldOut || false}
           )
           RETURNING *
         `;
@@ -193,6 +216,7 @@ export const db = {
 
     update: async (id: string, updates: Partial<Product>) => {
       try {
+        await ensureProductColumnsReady();
         console.log('Actualizando producto ID:', id);
         console.log('Updates recibidos:', updates);
         
@@ -212,7 +236,8 @@ export const db = {
           category: updates.category !== undefined ? updates.category : current.category,
           image: updates.image !== undefined ? updates.image : current.image,
           images: updates.images !== undefined ? updates.images : (current.images || []), // Mantener como array
-          featured: updates.featured !== undefined ? updates.featured : current.featured
+          featured: updates.featured !== undefined ? updates.featured : current.featured,
+          soldOut: updates.soldOut !== undefined ? updates.soldOut : current.sold_out
         };
         
         console.log('Datos a actualizar:', updatedData);
@@ -228,9 +253,10 @@ export const db = {
             image = ${updatedData.image},
             images = ${updatedData.images},
             featured = ${updatedData.featured},
+            sold_out = ${updatedData.soldOut},
             updated_at = NOW()
           WHERE id = ${id}
-          RETURNING id, name, description, category, price, image, images, featured, created_at, updated_at
+          RETURNING id, name, description, category, price, image, images, featured, sold_out, created_at, updated_at
         `;
         
         console.log('Resultado de la actualización:', result);
@@ -256,8 +282,9 @@ export const db = {
     },
     
     search: async (query: string) => {
+      await ensureProductColumnsReady();
       const rows = await sql`
-        SELECT id, name, description, category, price, image, images, featured, created_at, updated_at
+        SELECT id, name, description, category, price, image, images, featured, sold_out, created_at, updated_at
         FROM products 
         WHERE name ILIKE ${`%${query}%`} 
         OR description ILIKE ${`%${query}%`} 
@@ -268,8 +295,9 @@ export const db = {
     },
     
     getByCategory: async (category: string) => {
+      await ensureProductColumnsReady();
       const rows = await sql`
-        SELECT id, name, description, category, price, image, images, featured, created_at, updated_at
+        SELECT id, name, description, category, price, image, images, featured, sold_out, created_at, updated_at
         FROM products
         WHERE category = ${category}
         ORDER BY created_at DESC
